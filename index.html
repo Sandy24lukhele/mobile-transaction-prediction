@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction Status Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #b5b9bd;
+            padding: 35px;
+        }
+        .container {
+            background: rgb(253, 218, 13);
+            padding: 40px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        form input, form select, form button {
+            width: 90%;
+            padding: 10px 2px;
+            margin: 10px auto;
+            border: none;
+            border-radius: 6px;
+            display: block;
+            background-color: #e0e0e0;
+            font-weight: bold;
+            color: #000;
+            text-align: center;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 15px 150px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .results {
+            margin-top: 20px;
+            background-color: #ccd3cc;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #c1eac5;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>LISWATI MOBILEMONEY TRANSACTION INSIGHT AND PREDICTION ENGINE</h1>
+    <p class="tagline">PREDICTING FAILURES. PROTECTING TRUST. EMPOWERING ESWATINI.</p>
+
+    {% if current_balance is not none %}
+    <div class="results" style="text-align: center; background-color: #e0e0e0; color: black; margin-bottom: 20px;">
+        <strong>Current Balance:</strong> E {{ current_balance }}
+    </div>
+    {% endif %}
+
+    <!-- PREDICTION FORM -->
+    <form id="transactionForm" method="POST" action="/predict">
+        <select name="network_provider" required>
+            <option value="MTN" {% if request.form['network_provider'] == 'MTN' %}selected{% endif %}>MTN</option>
+            <option value="Eswatini Mobile" {% if request.form['network_provider'] == 'Eswatini Mobile' %}selected{% endif %}>Eswatini Mobile</option>
+            <option value="Unayo" {% if request.form['network_provider'] == 'Unayo' %}selected{% endif %}>Unayo</option>
+            <option value="InstaCash" {% if request.form['network_provider'] == 'InstaCash' %}selected{% endif %}>InstaCash</option>
+        </select>
+
+        <select name="transaction_type" required>
+            <option value="Send Money" {% if request.form['transaction_type'] == 'Send Money' %}selected{% endif %}>Send Money</option>
+            <option value="Bill Payment" {% if request.form['transaction_type'] == 'Bill Payment' %}selected{% endif %}>Bill Payment</option>
+            <option value="Airtime Purchase" {% if request.form['transaction_type'] == 'Airtime Purchase' %}selected{% endif %}>Airtime Purchase</option>
+            <option value="Cash Out" {% if request.form['transaction_type'] == 'Cash Out' %}selected{% endif %}>Cash Out</option>
+        </select>
+
+        <input type="number" name="amount" placeholder="Enter Amount" required value="{{ request.form['amount'] if request.form['amount'] else '' }}">
+        <input type="text" name="phone_number" placeholder="Enter recipient phone number" required value="{{ request.form['phone_number'] if request.form['phone_number'] else '' }}">
+        <input type="text" name="reason" placeholder="Enter reason for transaction (optional)">
+    </form>
+
+    {% if predictions %}
+        <!-- PREDICTION RESULTS -->
+        <div class="results">
+            <h3>Prediction Results</h3>
+            <p>{{ predictions['Message'] }}</p>
+            <p>Probability of Success: {{ predictions['Probability of Success'] }}</p>
+            <p>Probability of Failure: {{ predictions['Probability of Failure'] }}</p>
+        </div>
+
+        <!-- COMPLETE TRANSACTION FORM -->
+        <form method="POST" action="/complete_transaction">
+            <input type="hidden" name="network_provider" value="{{ request.form['network_provider'] }}">
+            <input type="hidden" name="transaction_type" value="{{ request.form['transaction_type'] }}">
+            <input type="hidden" name="amount" value="{{ request.form['amount'] }}">
+            <input type="hidden" name="phone_number" value="{{ request.form['phone_number'] }}">
+            <input type="hidden" name="reason" value="{{ request.form['reason'] }}">
+            <input type="hidden" name="status" value="{{ predictions['status'] }}">
+            <input type="hidden" name="prediction_success_probability" value="{{ predictions['Probability of Success'].replace('%', '') | float / 100 }}">
+            <input type="hidden" name="prediction_failure_probability" value="{{ predictions['Probability of Failure'].replace('%', '') | float / 100 }}">
+
+            <input type="password" name="pin" placeholder="Enter Your PIN" required>
+            <button type="submit">Complete Transaction</button>
+        </form>
+    {% endif %}
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <!-- LOGOUT -->
+    <div class="buttons">
+        <button type="button" onclick="window.location.href='/logout'">Logout</button>
+    </div>
+</div>
+
+<script>
+    let predictionTimer;
+
+    function schedulePrediction() {
+        clearTimeout(predictionTimer);  // Cancel previous timer
+        predictionTimer = setTimeout(() => {
+            const form = document.getElementById("transactionForm");
+            const requiredInputs = form.querySelectorAll("[required]");
+            let allFilled = true;
+
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    allFilled = false;
+                }
+            });
+
+            if (allFilled) {
+                form.submit();
+            }
+        }, 10000);  // 10 seconds
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        const inputs = document.querySelectorAll("#transactionForm input, #transactionForm select");
+        inputs.forEach(input => {
+            input.addEventListener("input", schedulePrediction);
+        });
+    });
+</script>
+</body>
+</html>

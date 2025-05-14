@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction Status Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #b5b9bd;
+            padding: 35px;
+        }
+        .container {
+            background: rgb(253, 218, 13);
+            padding: 40px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .tagline {
+    font-size: 1.2em;
+    font-weight: 500;
+    color: #555;
+    margin-top: 0.5em;
+    font-style: italic;
+}
+
+        form input, form select, form button {
+            width: 90%;
+            padding: 10px 2px;
+            margin: 10px auto;
+            border: none;
+            border-radius: 6px;
+            display: block;
+            background-color: #e0e0e0;
+            font-weight: bold;
+            color: #000;
+            text-align: center;
+        }
+        button {
+            display: block;
+            margin: 20px auto; /* auto centers horizontally */
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 15px 150px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+}
+
+        .results {
+            margin-top: 20px;
+            background-color: #ccd3cc;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #c1eac5;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        // Function to check if all required fields are filled
+        function autoSubmitForm() {
+            const form = document.getElementById("transactionForm");
+            const inputs = form.querySelectorAll("input[required], select[required]");
+            let allFilled = true;
+    
+            // Check if all required fields are filled
+            inputs.forEach(input => {
+                if (!input.value) {
+                    allFilled = false;
+                }
+            });
+    
+            // If all fields are filled, submit the form with a delay
+            if (allFilled) {
+                setTimeout(function() {
+                    form.submit();
+                }, 10000);  // 1-second delay (adjust this as needed)
+            }
+        }
+    
+        // Add event listeners to form fields to trigger auto submit
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById("transactionForm");
+            const inputs = form.querySelectorAll("input[required], select[required]");
+    
+            // Trigger auto submit when fields are changed
+            inputs.forEach(input => {
+                input.addEventListener('input', autoSubmitForm);
+            });
+        });
+    </script>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>LISWATI MOBILEMONEY TRANSACTION INSIGHT AND PREDICTION ENGINE</h1>
+        <p class="tagline">PREDICTING FAILURES. PROTECTING TRUST. EMPOWERING ESWATINI.</p>
+
+        <form id="transactionForm" method="POST" action="/predict">
+            <label for="network_provider"></label>
+            <select name="network_provider" required>
+                <option value="MTN" {% if request.form['network_provider'] == 'MTN' %}selected{% endif %}>MTN</option>
+            </select>
+
+            <label for="transaction_type"></label>
+            <select name="transaction_type" required>
+                <option value="Send Money" {% if request.form['transaction_type'] == 'Send Money' %}selected{% endif %}>Send Money</option>
+                <option value="Bill Payment" {% if request.form['transaction_type'] == 'Bill Payment' %}selected{% endif %}>Bill Payment</option>
+                <option value="Airtime Purchase" {% if request.form['transaction_type'] == 'Airtime Purchase' %}selected{% endif %}>Airtime Purchase</option>
+                <option value="Cash Out" {% if request.form['transaction_type'] == 'Cash Out' %}selected{% endif %}>Cash Out</option>
+            </select>
+
+            <label for="amount"></label>
+            <input type="number" name="amount" placeholder="Enter Amount" required value="{{ request.form['amount'] if request.form['amount'] else '' }}">
+
+            <!-- No submit button is needed anymore, auto-submit will be triggered -->
+
+                        <!-- Phone Number Input (No effect on prediction) -->
+                        <label for="phone_number"></label>
+                        <input type="text" name="phone_number" placeholder="Enter phone number" required value="{{ request.form['phone_number'] if request.form['phone_number'] else '' }}">
+            
+                        <!-- Reason Input (No effect on prediction) -->
+                        <label for="reason"></label>
+                        <input type="text" name="reason" placeholder="Enter reason for transaction (optional)">
+            
+        </form>
+
+        {% if predictions %}
+            <div class="results">
+                <h3>Prediction Results</h3>
+                <p>{{ predictions['Message'] }}</p>
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <div class="buttons">
+            <button type="button" onclick="alert('Transaction Completed!')">Complete Transaction</button>
+        </div>
+    </div>
+     <!-- Buttons -->
+
+</body>
+</html>
